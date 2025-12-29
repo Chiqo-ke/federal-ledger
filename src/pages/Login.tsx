@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +9,7 @@ import { login } from '@/services/api';
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login: authLogin } = useAuth();
   const [formData, setFormData] = useState({
     office_name: '',
     password: '',
@@ -23,9 +25,13 @@ export default function Login() {
     try {
       const response = await login(formData.office_name.trim(), formData.password.trim());
       
-      // Note: login() function already stores tokens in localStorage
-      // Just add a small delay to ensure localStorage is written
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Update AuthContext state
+      authLogin(response.access_token, {
+        office_name: response.office_name,
+        wallet_address: response.wallet_address,
+        role: response.role as any,
+        ministry_id: response.ministry_id
+      });
 
       // Redirect based on role
       if (response.role === 'super_admin') {
@@ -91,12 +97,6 @@ export default function Login() {
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
-
-          <div className="mt-6 text-center text-sm text-gray-600">
-            <p className="font-semibold">Demo Credentials:</p>
-            <p className="mt-1">Office: FinanceOffice</p>
-            <p>Password: admin123</p>
-          </div>
         </CardContent>
       </Card>
     </div>

@@ -1,0 +1,164 @@
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Building2, Users, Shield, Eye, ArrowRight } from "lucide-react";
+
+const Index = () => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      {/* Header */}
+      <header className="border-b bg-white/80 backdrop-blur">
+        <div className="container flex h-16 items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Building2 className="h-6 w-6 text-primary" />
+            <span className="font-bold text-xl">National Financial Platform</span>
+          </div>
+          <Button variant="ghost" onClick={() => navigate("/login")}>
+            Admin Login
+          </Button>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <div className="container py-16">
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            Welcome to the National Financial Platform
+          </h1>
+          <p className="text-xl text-muted-foreground">
+            Transparent, secure, and efficient government financial management powered by blockchain
+            technology
+          </p>
+        </div>
+
+        {/* Portal Selection */}
+        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          {/* Citizen Portal */}
+          <Card className="hover:shadow-2xl transition-all duration-300 border-2 hover:border-primary cursor-pointer group">
+            <CardHeader className="text-center pb-4">
+              <div className="mx-auto w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Users className="h-10 w-10 text-white" />
+              </div>
+              <CardTitle className="text-2xl">Citizen Portal</CardTitle>
+              <CardDescription>Access government services and information</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <ul className="space-y-3 mb-6">
+                <li className="flex items-start gap-2 text-sm">
+                  <Eye className="h-5 w-5 text-primary flex-shrink-0" />
+                  <span>View public spending and ministry budgets</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm">
+                  <Shield className="h-5 w-5 text-primary flex-shrink-0" />
+                  <span>Make secure tax payments online</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm">
+                  <Building2 className="h-5 w-5 text-primary flex-shrink-0" />
+                  <span>Submit reports and track government projects</span>
+                </li>
+              </ul>
+              <Button
+                className="w-full group-hover:bg-primary group-hover:text-white transition-colors"
+                size="lg"
+                onClick={() => navigate("/citizen")}
+              >
+                Enter Citizen Portal
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Admin Portal */}
+          <Card className="hover:shadow-2xl transition-all duration-300 border-2 hover:border-indigo-600 cursor-pointer group">
+            <CardHeader className="text-center pb-4">
+              <div className="mx-auto w-20 h-20 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Shield className="h-10 w-10 text-white" />
+              </div>
+              <CardTitle className="text-2xl">Admin Portal</CardTitle>
+              <CardDescription>Government administration and management</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <ul className="space-y-3 mb-6">
+                <li className="flex items-start gap-2 text-sm">
+                  <Building2 className="h-5 w-5 text-indigo-600 flex-shrink-0" />
+                  <span>Manage ministries and budget allocations</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm">
+                  <Shield className="h-5 w-5 text-indigo-600 flex-shrink-0" />
+                  <span>Track transactions on blockchain</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm">
+                  <Eye className="h-5 w-5 text-indigo-600 flex-shrink-0" />
+                  <span>Generate reports and audit logs</span>
+                </li>
+              </ul>
+              <Button
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+                size="lg"
+                onClick={() => navigate("/login")}
+              >
+                Admin Login
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Features Section */}
+        <div className="mt-24 text-center">
+          <h2 className="text-3xl font-bold mb-12">Platform Features</h2>
+          <div className="grid md:grid-cols-4 gap-6">
+            <div className="p-6">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Shield className="h-6 w-6 text-blue-600" />
+              </div>
+              <h3 className="font-semibold mb-2">Blockchain Security</h3>
+              <p className="text-sm text-muted-foreground">
+                All transactions are recorded on an immutable blockchain
+              </p>
+            </div>
+            <div className="p-6">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Eye className="h-6 w-6 text-green-600" />
+              </div>
+              <h3 className="font-semibold mb-2">Full Transparency</h3>
+              <p className="text-sm text-muted-foreground">
+                Public access to government spending and budgets
+              </p>
+            </div>
+            <div className="p-6">
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Building2 className="h-6 w-6 text-purple-600" />
+              </div>
+              <h3 className="font-semibold mb-2">Ministry Management</h3>
+              <p className="text-sm text-muted-foreground">
+                Efficient budget allocation and fund transfers
+              </p>
+            </div>
+            <div className="p-6">
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Users className="h-6 w-6 text-orange-600" />
+              </div>
+              <h3 className="font-semibold mb-2">Citizen Engagement</h3>
+              <p className="text-sm text-muted-foreground">
+                Easy tax payments and public reporting
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="border-t bg-white/80 backdrop-blur mt-24">
+        <div className="container py-8 text-center text-sm text-muted-foreground">
+          <p>© 2024 National Government Financial Platform. All rights reserved.</p>
+          <p className="mt-2">Powered by Blockchain Technology for Maximum Transparency</p>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default Index;
