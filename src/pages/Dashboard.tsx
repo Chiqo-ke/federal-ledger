@@ -1,10 +1,35 @@
+import { useQuery } from "@tanstack/react-query";
+import { DollarSign, Users, CreditCard } from "lucide-react";
+
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { KPICard } from "@/components/dashboard/KPICard";
 import { ActivityPanel } from "@/components/dashboard/ActivityPanel";
 import { SystemStatus } from "@/components/dashboard/SystemStatus";
-import { DollarSign, FileText, CheckCircle, AlertTriangle } from "lucide-react";
+import {
+  getKpis,
+  getTransactions,
+  getWalletCount,
+  getBlockCount,
+} from "../services/api";
 
 const Dashboard = () => {
+  const {
+    data: kpis,
+    isLoading: kpisLoading,
+  } = useQuery({ queryKey: ["kpis"], queryFn: getKpis });
+  const {
+    data: transactions,
+    isLoading: transactionsLoading,
+  } = useQuery({ queryKey: ["transactions"], queryFn: getTransactions });
+  const {
+    data: walletCount,
+    isLoading: walletCountLoading,
+  } = useQuery({ queryKey: ["walletCount"], queryFn: getWalletCount });
+  const {
+    data: blockCount,
+    isLoading: blockCountLoading,
+  } = useQuery({ queryKey: ["blockCount"], queryFn: getBlockCount });
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -19,101 +44,43 @@ const Dashboard = () => {
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <KPICard
-            title="Total Tax Revenue (YTD)"
-            value="$847.2M"
-            subtitle="Fiscal Year 2024"
+            title="Total Volume"
+            value={`$${kpis?.total_volume?.toLocaleString() ?? "0"}`}
             icon={DollarSign}
             variant="success"
-            trend={{ value: "12.4%", positive: true }}
+            isLoading={kpisLoading}
+            subtitle="Total funds transferred"
           />
           <KPICard
-            title="Pending Reports"
-            value="23"
-            subtitle="Awaiting review"
-            icon={FileText}
-            variant="warning"
-          />
-          <KPICard
-            title="Approved Transactions"
-            value="12,847"
-            subtitle="This month"
-            icon={CheckCircle}
+            title="Total Transactions"
+            value={kpis?.total_transactions?.toLocaleString() ?? "0"}
+            icon={CreditCard}
             variant="info"
-            trend={{ value: "8.2%", positive: true }}
+            isLoading={kpisLoading}
+            subtitle="Completed transactions"
           />
           <KPICard
-            title="Flagged Items"
-            value="7"
-            subtitle="Requires attention"
-            icon={AlertTriangle}
+            title="Pending Transactions"
+            value={kpis?.pending_transactions?.toLocaleString() ?? "0"}
+            icon={Users}
             variant="warning"
+            isLoading={kpisLoading}
+            subtitle="Awaiting confirmation"
           />
         </div>
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Activity Panel - Takes 2 columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2">
-            <ActivityPanel />
+            <ActivityPanel
+              transactions={transactions}
+              isLoading={transactionsLoading}
+            />
           </div>
-
-          {/* System Status - Takes 1 column */}
           <div>
-            <SystemStatus />
-          </div>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="card-elevated rounded-lg p-5">
-            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Today's Revenue
-            </h3>
-            <p className="text-xl font-bold font-mono text-foreground mt-2">
-              $4,847,291.00
-            </p>
-            <div className="mt-3 h-2 bg-muted rounded-full overflow-hidden">
-              <div
-                className="h-full bg-success rounded-full"
-                style={{ width: "78%" }}
-              />
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              78% of daily target
-            </p>
-          </div>
-
-          <div className="card-elevated rounded-lg p-5">
-            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Monthly Revenue
-            </h3>
-            <p className="text-xl font-bold font-mono text-foreground mt-2">
-              $127,492,841.00
-            </p>
-            <div className="mt-3 h-2 bg-muted rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary rounded-full"
-                style={{ width: "94%" }}
-              />
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              94% of monthly target
-            </p>
-          </div>
-
-          <div className="card-elevated rounded-lg p-5">
-            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Blockchain Confirmations
-            </h3>
-            <p className="text-xl font-bold font-mono text-foreground mt-2">
-              4,847,291
-            </p>
-            <div className="mt-3 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-success animate-pulse-subtle" />
-              <span className="text-xs text-muted-foreground">
-                Last block: 2 seconds ago
-              </span>
-            </div>
+            <SystemStatus
+              walletCount={walletCount?.count}
+              blockCount={blockCount?.count}
+              isLoading={walletCountLoading || blockCountLoading}
+            />
           </div>
         </div>
       </div>
