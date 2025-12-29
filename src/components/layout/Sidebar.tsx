@@ -11,6 +11,7 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import {
 
 const navItems = [
   { title: "Dashboard", icon: LayoutDashboard, path: "/" },
+  { title: "Ministries", icon: Building2, path: "/ministries" },
   { title: "Financial Overview", icon: DollarSign, path: "/financial" },
   { title: "Tax Payments", icon: Receipt, path: "/tax-payments" },
   { title: "Reports Management", icon: FileText, path: "/reports" },

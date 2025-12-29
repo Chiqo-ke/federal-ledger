@@ -1,4 +1,48 @@
+import axios from 'axios';
+
 const API_BASE_URL = 'http://127.0.0.1:8000';
+
+// ==================== Axios Instance with Interceptors ====================
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Request interceptor to add authentication token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+      console.log('Adding token to request:', config.url);
+    } else {
+      console.warn('No token found for request:', config.url);
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor to handle authentication errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Clear auth data and redirect to login
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+// ==================== Interfaces ====================
 
 export interface Transaction {
   id: number;
@@ -9,6 +53,10 @@ export interface Transaction {
   signature?: string;
   transaction_id?: string;
   purpose?: string;
+  ministry_id?: number;
+  ministry_name?: string;
+  project_id?: number;
+  category?: string;
 }
 
 export interface KpiData {
@@ -17,14 +65,151 @@ export interface KpiData {
   pending_transactions: number;
 }
 
+export interface Ministry {
+  id: number;
+  name: string;
+  code: string;
+  ministry_type: string;
+  description: string | null;
+  wallet_address: string;
+  allocated_budget: number;
+  used_funds: number;
+  remaining_balance: number;
+  icon: string | null;
+  color: string | null;
+  is_active: boolean;
+  created_at: string;
+  active_projects: number;
+  total_projects: number;
+}
+
+export interface MinistryCreate {
+  name: string;
+  ministry_type: string;
+  description?: string;
+  icon?: string;
+  color?: string;
+  allocated_budget?: number;
+}
+
+export interface Project {
+  id: number;
+  ministry_id: number;
+  name: string;
+  description: string | null;
+  budget: number;
+  spent: number;
+  status: string;
+  start_date: string | null;
+  end_date: string | null;
+  created_at: string;
+}
+
+export interface ProjectCreate {
+  ministry_id: number;
+  name: string;
+  description?: string;
+  budget: number;
+  start_date?: string;
+  end_date?: string;
+}
+
+export interface ExpenseRequest {
+  id: number;
+  ministry_id: number;
+  project_id: number | null;
+  amount: number;
+  purpose: string;
+  category: string | null;
+  status: string;
+  requested_by: string;
+  requested_at: string;
+  approved_by: string | null;
+  approved_at: string | null;
+  rejected_by: string | null;
+  rejected_at: string | null;
+  rejection_reason: string | null;
+  transaction_hash: string | null;
+}
+
+export interface ExpenseRequestCreate {
+  ministry_id: number;
+  project_id?: number;
+  amount: number;
+  purpose: string;
+  category?: string;
+}
+
+export interface AuthTokens {
+  access_token: string;
+  token_type: string;
+  refresh_token: string;
+  wallet_address: string;
+  office_name: string;
+  role: string;
+  ministry_id: number | null;
+}
+
+// ==================== Auth API ====================
+
+export const login = async (office_name: string, password: string): Promise<AuthTokens> => {
+  const response = await api.post('/token', { office_name, password });
+  const data = response.data;
+  
+  // Store tokens in localStorage
+  localStorage.setItem('access_token', data.access_token);
+  localStorage.setItem('refresh_token', data.refresh_token);
+  localStorage.setItem('user_role', data.role);
+  localStorage.setItem('ministry_id', data.ministry_id?.toString() || '');
+  localStorage.setItem('office_name', data.office_name);
+  localStorage.setItem('wallet_address', data.wallet_address);
+  
+  return data;
+};
+
+export const register = async (
+  office_name: string,
+  password: string,
+  role: string = 'citizen',
+  ministry_id?: number
+): Promise<any> => {
+  const response = await api.post('/register', { office_name, password, role, ministry_id });
+  return response.data;
+};
+
+export const logout = () => {
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('user_role');
+  localStorage.removeItem('ministry_id');
+  localStorage.removeItem('office_name');
+  localStorage.removeItem('wallet_address');
+};
+
+export const getAuthHeader = (): HeadersInit => {
+  const token = localStorage.getItem('access_token');
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
+};
+
+export const isAuthenticated = (): boolean => {
+  return !!localStorage.getItem('access_token');
+};
+
+export const getUserRole = (): string | null => {
+  return localStorage.getItem('user_role');
+};
+
+export const getUserMinistryId = (): number | null => {
+  const id = localStorage.getItem('ministry_id');
+  return id ? parseInt(id) : null;
+};
+
+// ==================== Transaction API ====================
+
 export const getTransactions = async (): Promise<Transaction[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/transactions_all/`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch transactions');
-    }
-    const data = await response.json();
-    // Map the backend data to our Transaction interface
+    const response = await api.get('/transactions_all/');
+    const data = response.data;
     return data.transactions_all?.map((tx: any, index: number) => ({
       id: index + 1,
       sender: tx.sender,
@@ -33,7 +218,11 @@ export const getTransactions = async (): Promise<Transaction[]> => {
       timestamp: tx.timestamp,
       signature: tx.transaction_id || '',
       transaction_id: tx.transaction_id,
-      purpose: tx.purpose
+      purpose: tx.purpose,
+      ministry_id: tx.ministry_id,
+      ministry_name: tx.ministry_name,
+      project_id: tx.project_id,
+      category: tx.category
     })) || [];
   } catch (error) {
     console.error('Error fetching transactions:', error);
@@ -43,59 +232,193 @@ export const getTransactions = async (): Promise<Transaction[]> => {
 
 export const getKpis = async (): Promise<KpiData> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/transactions_all/`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch KPIs');
-    }
-    const data = await response.json();
-    const transactions = data.transactions_all || [];
+    const response = await api.get('/transactions_all/');
+    const data = response.data;
     
-    // Calculate KPIs from transactions
-    const totalTransactions = transactions.length;
-    const totalVolume = transactions.reduce((sum: number, tx: any) => sum + (tx.amount || 0), 0);
+    const transactions = data.transactions_all || [];
+    const total_volume = transactions.reduce((sum: number, tx: any) => sum + (tx.amount || 0), 0);
     
     return {
-      total_transactions: totalTransactions,
-      total_volume: totalVolume,
-      pending_transactions: 0, // No pending transactions in this implementation
+      total_transactions: transactions.length,
+      total_volume,
+      pending_transactions: 0
     };
   } catch (error) {
     console.error('Error fetching KPIs:', error);
     return {
       total_transactions: 0,
       total_volume: 0,
-      pending_transactions: 0,
+      pending_transactions: 0
     };
   }
 };
 
-export const getWalletCount = async (): Promise<{ count: number }> => {
+export const getWalletCount = async (): Promise<number> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/users/`, {
-      credentials: 'omit' // Don't send credentials for now
-    });
-    if (!response.ok) {
-      // If authentication is required, return mock data
-      return { count: 0 };
-    }
-    const data = await response.json();
-    return { count: data.users?.length || 0 };
+    const response = await api.get('/users/');
+    const data = response.data;
+    return data.users?.length || 0;
   } catch (error) {
     console.error('Error fetching wallet count:', error);
-    return { count: 0 };
+    return 0;
   }
 };
 
-export const getBlockCount = async (): Promise<{ count: number }> => {
+export const getBlockCount = async (): Promise<number> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/blockchain`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch block count');
-    }
-    const data = await response.json();
-    return { count: data.length || 0 };
+    const response = await api.get('/blockchain');
+    const data = response.data;
+    return data.blockchain_length || 0;
   } catch (error) {
     console.error('Error fetching block count:', error);
-    return { count: 0 };
+    return 0;
+  }
+};
+
+// ==================== Ministry API ====================
+
+export const getMinistries = async (): Promise<Ministry[]> => {
+  const response = await api.get('/ministries');
+  return response.data;
+};
+
+export const getMinistry = async (id: number): Promise<Ministry> => {
+  const response = await api.get(`/ministries/${id}`);
+  return response.data;
+};
+
+export const createMinistry = async (ministry: MinistryCreate): Promise<Ministry> => {
+  const response = await api.post('/ministries', ministry);
+  return response.data;
+};
+
+export const allocateBudget = async (
+  ministry_id: number,
+  allocation: { amount: number; purpose: string; approved_by?: string }
+): Promise<any> => {
+  const response = await api.post(`/ministries/${ministry_id}/allocate-budget`, allocation);
+  return response.data;
+};
+
+export const getMinistryTransactions = async (ministry_id: number): Promise<any> => {
+  const response = await api.get(`/ministries/${ministry_id}/transactions`);
+  return response.data;
+};
+
+export const transferToMinistry = async (
+  recipient_ministry_id: number,
+  amount: number,
+  purpose: string,
+  approved_by?: string
+): Promise<any> => {
+  const response = await api.post('/ministries/transfer', {
+    recipient_ministry_id,
+    amount,
+    purpose,
+    approved_by
+  });
+  return response.data;
+};
+
+// ==================== Project API ====================
+
+export const getMinistryProjects = async (ministry_id: number): Promise<Project[]> => {
+  const response = await api.get(`/ministries/${ministry_id}/projects`);
+  return response.data;
+};
+
+export const createProject = async (ministry_id: number, project: Omit<ProjectCreate, 'ministry_id'>): Promise<Project> => {
+  const response = await api.post('/projects', { ...project, ministry_id });
+  return response.data;
+};
+
+// ==================== Expense Request API ====================
+
+export const getMinistryExpenses = async (
+  ministry_id: number,
+  status?: string
+): Promise<ExpenseRequest[]> => {
+  const params = status ? { status_filter: status } : {};
+  const response = await api.get(`/ministries/${ministry_id}/expense-requests`, { params });
+  return response.data;
+};
+
+export const createExpenseRequest = async (
+  expense: ExpenseRequestCreate
+): Promise<ExpenseRequest> => {
+  const response = await api.post('/expense-requests', expense);
+  return response.data;
+};
+
+export const approveExpense = async (expense_id: number): Promise<any> => {
+  const response = await api.put(`/expense-requests/${expense_id}/approve`);
+  return response.data;
+};
+
+export const rejectExpense = async (
+  expense_id: number,
+  rejection_reason: string
+): Promise<any> => {
+  const response = await api.put(`/expense-requests/${expense_id}/reject`, {
+    status: 'rejected',
+    rejection_reason
+  });
+  return response.data;
+};
+
+// ==================== WebSocket Connection ====================
+
+let websocket: WebSocket | null = null;
+let reconnectTimer: NodeJS.Timeout | null = null;
+
+export const connectWebSocket = (
+  wallet_address: string,
+  onMessage: (data: any) => void
+): WebSocket | null => {
+  try {
+    websocket = new WebSocket(`ws://127.0.0.1:8000/ws/${wallet_address}`);
+    
+    websocket.onopen = () => {
+      console.log('WebSocket connected');
+    };
+    
+    websocket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        onMessage(data);
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
+      }
+    };
+    
+    websocket.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+    
+    websocket.onclose = () => {
+      console.log('WebSocket disconnected');
+      // Auto-reconnect after 5 seconds
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      reconnectTimer = setTimeout(() => {
+        console.log('Attempting to reconnect WebSocket...');
+        connectWebSocket(wallet_address, onMessage);
+      }, 5000);
+    };
+    
+    return websocket;
+  } catch (error) {
+    console.error('Error creating WebSocket:', error);
+    return null;
+  }
+};
+
+export const disconnectWebSocket = () => {
+  if (websocket) {
+    websocket.close();
+    websocket = null;
+  }
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer);
+    reconnectTimer = null;
   }
 };
