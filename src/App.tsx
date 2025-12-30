@@ -13,7 +13,8 @@ import FinancialOverview from "./pages/FinancialOverview";
 import ReportsManagement from "./pages/ReportsManagement";
 import AuditLogs from "./pages/AuditLogs";
 import SystemTransparency from "./pages/SystemTransparency";
-import { TaxPayments, CitizenSubmissions, SettingsPage } from "./pages/PlaceholderPages";
+import TaxPaymentsPage from "./pages/TaxPaymentsPage";
+import { CitizenSubmissions, SettingsPage } from "./pages/PlaceholderPages";
 import NotFound from "./pages/NotFound";
 import CitizenDashboard from "./pages/citizen/CitizenDashboard";
 import PayTax from "./pages/citizen/PayTax";
@@ -34,7 +35,7 @@ const App = () => (
           <Route path="/ministries" element={<ProtectedRoute><MinistriesOverview /></ProtectedRoute>} />
           <Route path="/ministry/:ministryType" element={<ProtectedRoute><MinistryDashboard /></ProtectedRoute>} />
           <Route path="/financial" element={<ProtectedRoute><FinancialOverview /></ProtectedRoute>} />
-          <Route path="/tax-payments" element={<ProtectedRoute><TaxPayments /></ProtectedRoute>} />
+          <Route path="/tax-payments" element={<ProtectedRoute><TaxPaymentsPage /></ProtectedRoute>} />
           <Route path="/reports" element={<ProtectedRoute><ReportsManagement /></ProtectedRoute>} />
           <Route path="/submissions" element={<ProtectedRoute><CitizenSubmissions /></ProtectedRoute>} />
           <Route path="/audit" element={<ProtectedRoute><AuditLogs /></ProtectedRoute>} />

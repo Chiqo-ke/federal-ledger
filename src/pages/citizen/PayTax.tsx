@@ -8,11 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { CreditCard, DollarSign, Shield, CheckCircle2 } from "lucide-react";
 import { CitizenLayout } from "@/components/layout/CitizenLayout";
+import { submitTaxPayment, getErrorMessage } from "@/services/api";
 
 const PayTax = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
+  const [receiptNumber, setReceiptNumber] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("mpesa");
 
   const [formData, setFormData] = useState({
     taxpayerName: "",
@@ -39,15 +42,35 @@ const PayTax = () => {
     e.preventDefault();
     setLoading(true);
 
-    // Simulate payment processing
-    setTimeout(() => {
+    try {
+      // Submit payment to backend
+      const payment = await submitTaxPayment({
+        taxpayer_name: formData.taxpayerName,
+        id_number: formData.idNumber,
+        tax_type: formData.taxType,
+        amount: parseFloat(formData.amount),
+        phone_number: formData.phoneNumber,
+        email: formData.email,
+        payment_method: paymentMethod,
+      });
+
+      setReceiptNumber(payment.receipt_number);
       setLoading(false);
       setStep(3);
+      
       toast({
         title: "Payment Successful!",
         description: `Your tax payment of KES ${parseFloat(formData.amount).toLocaleString()} has been processed.`,
       });
-    }, 2000);
+    } catch (error: any) {
+      setLoading(false);
+      const errorMessage = getErrorMessage(error);
+      toast({
+        title: "Payment Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
   if (step === 3) {
@@ -299,7 +322,12 @@ const PayTax = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
-                  <div className="border-2 border-primary rounded-lg p-4 cursor-pointer hover:bg-primary/5">
+                  <div 
+                    className={`border-2 rounded-lg p-4 cursor-pointer ${
+                      paymentMethod === "mpesa" ? "border-primary bg-primary/5" : "border-gray-200 hover:bg-gray-50"
+                    }`}
+                    onClick={() => setPaymentMethod("mpesa")}
+                  >
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                         <span className="text-green-600 font-bold text-lg">M</span>
@@ -311,7 +339,12 @@ const PayTax = () => {
                     </div>
                   </div>
 
-                  <div className="border rounded-lg p-4 cursor-pointer hover:bg-gray-50">
+                  <div 
+                    className={`border-2 rounded-lg p-4 cursor-pointer ${
+                      paymentMethod === "card" ? "border-primary bg-primary/5" : "border-gray-200 hover:bg-gray-50"
+                    }`}
+                    onClick={() => setPaymentMethod("card")}
+                  >
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                         <CreditCard className="h-6 w-6 text-blue-600" />

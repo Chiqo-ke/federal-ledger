@@ -33,14 +33,17 @@ export default function Login() {
         ministry_id: response.ministry_id
       });
 
-      // Redirect based on role
-      if (response.role === 'super_admin') {
-        navigate('/');
-      } else if (response.role === 'ministry_admin' || response.role === 'ministry_officer') {
-        navigate('/ministries');
-      } else {
-        navigate('/');
-      }
+      // Use setTimeout to ensure state updates before navigation
+      setTimeout(() => {
+        // Redirect based on role
+        if (response.role === 'super_admin') {
+          navigate('/admin', { replace: true });
+        } else if (response.role === 'ministry_admin' || response.role === 'ministry_officer') {
+          navigate('/ministries', { replace: true });
+        } else {
+          navigate('/admin', { replace: true });
+        }
+      }, 100);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Login failed. Please check your credentials.');
     } finally {

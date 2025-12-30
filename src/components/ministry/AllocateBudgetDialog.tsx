@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { DollarSign } from 'lucide-react';
-import { allocateBudget } from '@/services/api';
+import { allocateBudget, getErrorMessage } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 
 interface AllocateBudgetDialogProps {
@@ -22,6 +22,7 @@ export default function AllocateBudgetDialog({ ministryId, ministryName, onSucce
   const [formData, setFormData] = useState({
     amount: '',
     purpose: '',
+    fiscal_year: new Date().getFullYear().toString(),
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,9 +30,12 @@ export default function AllocateBudgetDialog({ ministryId, ministryName, onSucce
     setLoading(true);
 
     try {
+      const approvedBy = localStorage.getItem('office_name') || 'FinanceOffice';
       const response = await allocateBudget(ministryId, {
         amount: parseFloat(formData.amount),
         purpose: formData.purpose,
+        fiscal_year: parseInt(formData.fiscal_year),
+        approved_by: approvedBy,
       });
       
       toast({
@@ -39,13 +43,15 @@ export default function AllocateBudgetDialog({ ministryId, ministryName, onSucce
         description: `KES ${parseFloat(formData.amount).toLocaleString()} allocated to ${ministryName}`,
       });
       
-      setFormData({ amount: '', purpose: '' });
+      setFormData({ amount: '', purpose: '', fiscal_year: new Date().getFullYear().toString() });
       setOpen(false);
       onSuccess?.();
     } catch (error: any) {
+      const errorMessage = getErrorMessage(error);
+      console.error('Budget allocation error:', errorMessage);
       toast({
         title: 'Error',
-        description: error.response?.data?.detail || 'Failed to allocate budget',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
@@ -66,6 +72,21 @@ export default function AllocateBudgetDialog({ ministryId, ministryName, onSucce
           <DialogTitle>Allocate Budget to {ministryName}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="fiscal_year">Fiscal Year</Label>
+            <Input
+              id="fiscal_year"
+              type="number"
+              min="2000"
+              max="2100"
+              placeholder="2025"
+              value={formData.fiscal_year}
+              onChange={(e) => setFormData({ ...formData, fiscal_year: e.target.value })}
+              required
+              disabled={loading}
+            />
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="amount">Amount (KES)</Label>
             <Input

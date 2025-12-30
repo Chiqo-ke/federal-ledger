@@ -292,9 +292,39 @@ export const createMinistry = async (ministry: MinistryCreate): Promise<Ministry
   return response.data;
 };
 
+// Helper function to extract error message from API responses
+export const getErrorMessage = (error: any): string => {
+  if (error.response?.data?.detail) {
+    const detail = error.response.data.detail;
+    
+    // If detail is an array of validation errors
+    if (Array.isArray(detail)) {
+      return detail.map((err: any) => {
+        if (typeof err === 'object' && err.msg) {
+          const field = err.loc ? err.loc[err.loc.length - 1] : '';
+          return field ? `${field}: ${err.msg}` : err.msg;
+        }
+        return String(err);
+      }).join(', ');
+    }
+    
+    // If detail is a string
+    if (typeof detail === 'string') {
+      return detail;
+    }
+    
+    // If detail is an object with msg property
+    if (typeof detail === 'object' && detail.msg) {
+      return detail.msg;
+    }
+  }
+  
+  return error.message || 'An error occurred';
+};
+
 export const allocateBudget = async (
   ministry_id: number,
-  allocation: { amount: number; purpose: string; approved_by?: string }
+  allocation: { amount: number; purpose: string; fiscal_year: number; approved_by?: string }
 ): Promise<any> => {
   const response = await api.post(`/ministries/${ministry_id}/allocate-budget`, allocation);
   return response.data;
@@ -363,6 +393,80 @@ export const rejectExpense = async (
     status: 'rejected',
     rejection_reason
   });
+  return response.data;
+};
+
+// ==================== Tax Payment API ====================
+
+export interface TaxPayment {
+  id: number;
+  receipt_number: string;
+  taxpayer_name: string;
+  id_number: string;
+  phone_number?: string;
+  email?: string;
+  tax_type: string;
+  amount: number;
+  payment_method?: string;
+  status: string;
+  transaction_hash?: string;
+  created_at: string;
+}
+
+export interface TaxPaymentCreate {
+  taxpayer_name: string;
+  id_number: string;
+  tax_type: string;
+  amount: number;
+  phone_number?: string;
+  email?: string;
+  payment_method?: string;
+}
+
+export interface TaxPaymentStats {
+  total_payments: number;
+  total_revenue: number;
+  recent_payments_30days: number;
+  by_tax_type: Array<{
+    tax_type: string;
+    count: number;
+    total_amount: number;
+  }>;
+}
+
+export const submitTaxPayment = async (payment: TaxPaymentCreate): Promise<TaxPayment> => {
+  const response = await api.post('/tax-payments', payment);
+  return response.data;
+};
+
+export const getTaxPayments = async (
+  skip?: number,
+  limit?: number,
+  status?: string,
+  tax_type?: string
+): Promise<TaxPayment[]> => {
+  const params: any = {};
+  if (skip !== undefined) params.skip = skip;
+  if (limit !== undefined) params.limit = limit;
+  if (status) params.status = status;
+  if (tax_type) params.tax_type = tax_type;
+  
+  const response = await api.get('/tax-payments', { params });
+  return response.data;
+};
+
+export const getTaxPaymentById = async (payment_id: number): Promise<TaxPayment> => {
+  const response = await api.get(`/tax-payments/${payment_id}`);
+  return response.data;
+};
+
+export const getTaxPaymentByReceipt = async (receipt_number: string): Promise<TaxPayment> => {
+  const response = await api.get(`/tax-payments/receipt/${receipt_number}`);
+  return response.data;
+};
+
+export const getTaxPaymentStats = async (): Promise<TaxPaymentStats> => {
+  const response = await api.get('/tax-payments/stats/summary');
   return response.data;
 };
 
