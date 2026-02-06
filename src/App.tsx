@@ -19,6 +19,7 @@ import NotFound from "./pages/NotFound";
 import CitizenDashboard from "./pages/citizen/CitizenDashboard";
 import PayTax from "./pages/citizen/PayTax";
 import SubmitReport from "./pages/citizen/SubmitReport";
+import PublicTransparency from "./pages/citizen/PublicTransparency";
 
 const App = () => (
   <TooltipProvider>
@@ -46,7 +47,7 @@ const App = () => (
           <Route path="/citizen" element={<CitizenDashboard />} />
           <Route path="/citizen/pay-tax" element={<PayTax />} />
           <Route path="/citizen/submit-report" element={<SubmitReport />} />
-          <Route path="/citizen/transparency" element={<CitizenDashboard />} />
+          <Route path="/citizen/transparency" element={<PublicTransparency />} />
           <Route path="/citizen/projects" element={<CitizenDashboard />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

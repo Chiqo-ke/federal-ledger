@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -33,6 +33,7 @@ interface GovernmentStat {
 }
 
 const CitizenDashboard = () => {
+  const navigate = useNavigate();
   const [selectedPeriod, setSelectedPeriod] = useState("month");
 
   // Mock data - replace with actual API calls
@@ -273,7 +274,10 @@ const CitizenDashboard = () => {
 
         {/* Quick Actions */}
         <div className="grid gap-4 md:grid-cols-3">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Card 
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => navigate("/citizen/pay-tax")}
+          >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Receipt className="h-5 w-5 text-blue-600" />
@@ -283,7 +287,10 @@ const CitizenDashboard = () => {
             </CardHeader>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Card 
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => navigate("/citizen/submit-report")}
+          >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5 text-green-600" />
@@ -293,13 +300,16 @@ const CitizenDashboard = () => {
             </CardHeader>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Card 
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => navigate("/citizen/transparency")}
+          >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Eye className="h-5 w-5 text-purple-600" />
-                View Projects
+                View Transparency
               </CardTitle>
-              <CardDescription>See ongoing government projects</CardDescription>
+              <CardDescription>Access public financial data</CardDescription>
             </CardHeader>
           </Card>
         </div>
