@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://127.0.0.1:8000';
+// Use environment variable for API URL, fallback to localhost for development
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
+
+console.log('API Base URL:', API_BASE_URL); // For debugging
 
 // ==================== Axios Instance with Interceptors ====================
 
@@ -472,6 +475,9 @@ export const getTaxPaymentStats = async (): Promise<TaxPaymentStats> => {
 
 // ==================== WebSocket Connection ====================
 
+// Use environment variable for WebSocket URL
+const WS_BASE_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8001';
+
 let websocket: WebSocket | null = null;
 let reconnectTimer: NodeJS.Timeout | null = null;
 
@@ -480,7 +486,9 @@ export const connectWebSocket = (
   onMessage: (data: any) => void
 ): WebSocket | null => {
   try {
-    websocket = new WebSocket(`ws://127.0.0.1:8000/ws/${wallet_address}`);
+    const wsUrl = `${WS_BASE_URL}/ws/${wallet_address}`;
+    console.log('Connecting to WebSocket:', wsUrl);
+    websocket = new WebSocket(wsUrl);
     
     websocket.onopen = () => {
       console.log('WebSocket connected');
